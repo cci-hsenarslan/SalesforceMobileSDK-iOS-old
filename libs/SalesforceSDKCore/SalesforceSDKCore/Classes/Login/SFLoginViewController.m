@@ -33,6 +33,7 @@
 #import "SFSDKLoginHostDelegate.h"
 #define kOFFSET_FOR_KEYBOARD 200.0
 #import "SFOAuthCredentials.h"
+#import "UIView+Toast.h"
 
 @interface SFLoginViewController () <SFSDKLoginHostDelegate, SFUserAccountManagerDelegate, SFAuthenticationManagerDelegate>
 // Reference to the login host list view controller
@@ -266,15 +267,38 @@ BOOL isPreseller = false;
 
 -(void) actionLogin
 {
-    if ([self validateEmail:self.usernameTextField.text]) {
-        UIAlertController *emailAlert = [UIAlertController alertControllerWithTitle:NSLocalizedString(@"email_error_title", "") message:NSLocalizedString(@"email_error_message", "") preferredStyle:UIAlertControllerStyleAlert];
-        UIAlertAction *okAction = [UIAlertAction actionWithTitle:NSLocalizedString(@"OK", "") style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-            [emailAlert dismissViewControllerAnimated:YES completion:nil];
-        }];
-        [emailAlert addAction:okAction];
-        [self presentViewController:emailAlert animated:YES completion:nil];
-        return ;
+    
+    CSToastStyle *style = [[CSToastStyle alloc] initWithDefaultStyle];
+    style.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"btn_dark_grey"]];
+    
+    if ([self.usernameTextField.text isEqual:@""] || [self.passwordTextField.text isEqual:@""]) {
+        NSString *langValue =[[NSUserDefaults standardUserDefaults] stringForKey:@"LangValue"];
+        NSString *message = @"Kullanıcı adı veya şifre boş olamaz.";
+        if([langValue isEqualToString:self.langList[0]])
+        {
+            message = @"Username or password is can not be empty.";
+        }
+        else if([langValue isEqualToString:self.langList[2]])
+        {
+            message = @"Имя пользователя или пароль не должны быть пустыми.";
+        }
+        
+        [self.view makeToast:message
+                    duration:3.0
+                    position:CSToastPositionBottom
+                    style:style];
+        return;
     }
+    
+//    if ([self validateEmail:self.usernameTextField.text]) {
+//        UIAlertController *emailAlert = [UIAlertController alertControllerWithTitle:NSLocalizedString(@"email_error_title", "") message:NSLocalizedString(@"email_error_message", "") preferredStyle:UIAlertControllerStyleAlert];
+//        UIAlertAction *okAction = [UIAlertAction actionWithTitle:NSLocalizedString(@"OK", "") style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+//            [emailAlert dismissViewControllerAnimated:YES completion:nil];
+//        }];
+//        [emailAlert addAction:okAction];
+//        [self presentViewController:emailAlert animated:YES completion:nil];
+//        return ;
+//    }
     
     
     
@@ -292,10 +316,10 @@ BOOL isPreseller = false;
     [self.usernameTextField resignFirstResponder];
     [self.passwordTextField resignFirstResponder];
     NSString *urlAdfs=@"https://sso.cci.com.tr/adfs/ls/";
-    NSString *idLogin=@"ContentPlaceHolder1_UsernameTextBox";
-    NSString *idPassword=@"ContentPlaceHolder1_PasswordTextBox";
-    NSString *idError=@"ContentPlaceHolder1_ErrorTextLabel";
-    NSString *loginSubmitButtonHTMLString=@"document.getElementById(\"ContentPlaceHolder1_SubmitButton\").click();";
+    NSString *idLogin=@"username";//ContentPlaceHolder1_UsernameTextBox";
+    NSString *idPassword=@"password";//ContentPlaceHolder1_PasswordTextBox";
+    NSString *idError=@"error"; //ContentPlaceHolder1_ErrorTextLabel";
+    NSString *loginSubmitButtonHTMLString=@"document.getElementById(\"Login\").click();"; //ContentPlaceHolder1_SubmitButton
     
     
     if (isPreseller) {
@@ -328,6 +352,35 @@ BOOL isPreseller = false;
                to:[self.passwordTextField.text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]]
              html:webView ];
         NSString * output=[webView stringByEvaluatingJavaScriptFromString:loginSubmitButtonHTMLString];
+        
+        NSTimeInterval delayInSeconds = 2.0;
+        dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
+        dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
+            NSString * errorOutput=[webView stringByEvaluatingJavaScriptFromString:@"document.getElementById(\"error\").textContent;"];
+            NSLog(@"Do some work : %@", errorOutput);
+            if(![errorOutput isEqual:@""]) {
+                self.progressView.hidden = YES;
+                CSToastStyle *style = [[CSToastStyle alloc] initWithDefaultStyle];
+                style.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"btn_dark_grey"]];
+                
+                NSString *langValue =[[NSUserDefaults standardUserDefaults] stringForKey:@"LangValue"];
+                NSString *message = @"Kullanıcı adı veya parola yanlış.";
+                if([langValue isEqualToString:self.langList[0]])
+                {
+                    message = @"The user name or password is incorrect.";
+                }
+                else if([langValue isEqualToString:self.langList[2]])
+                {
+                    message = @"Неверное имя пользователя или пароль.";
+                }
+                
+                [self.view makeToast:message
+                            duration:3.0
+                            position:CSToastPositionBottom
+                            style:style];
+            }
+        });
+        
         NSLog(@"output : %@",output);
     }
     
@@ -656,6 +709,7 @@ BOOL isPreseller = false;
         selectSalesCenterLocal = @"Select Sales Center";
         orLocal = @"OR";
         loginTypeLabel.text = @"Distributor Login";
+        [goButton setTitle: @"Login" forState:UIControlStateNormal];
     }
     else if([langValue isEqualToString:self.langList[1]])
     {
@@ -665,6 +719,7 @@ BOOL isPreseller = false;
         selectSalesCenterLocal = @"Satış Noktası Seçiniz";
         orLocal = @"VEYA";
         loginTypeLabel.text = @"Dağıtıcı Girişi";
+        [goButton setTitle: @"Giriş" forState:UIControlStateNormal];
         
     }
     else if([langValue isEqualToString:self.langList[2]])
@@ -675,6 +730,7 @@ BOOL isPreseller = false;
         selectSalesCenterLocal = @"Выберите Центр продаж";
         orLocal = @"или";
         loginTypeLabel.text = @"Distributor Login";
+        [goButton setTitle: @"Логин" forState:UIControlStateNormal];
         
     }
     else if([langValue isEqualToString:self.langList[3]])
@@ -811,7 +867,7 @@ BOOL isPreseller = false;
             CGRect mainRect = [[UIScreen mainScreen] bounds];
             CGFloat firstY =  (mainRect.size.height/4)-110;
             mainRect = CGRectMake(0, 0, [[UIScreen mainScreen] bounds].size.width - 40, [[UIScreen mainScreen] bounds].size.height);
-            languageTableView = [[UITableView alloc] initWithFrame:CGRectMake(10, 52,  mainRect.size.width-20, 176)
+            languageTableView = [[UITableView alloc] initWithFrame:CGRectMake(10, 52,  mainRect.size.width-20, 130)
                                                              style:UITableViewStylePlain];
             languageTableView.layer.cornerRadius = 8;
             //  languageTableView.tag = 0;
@@ -986,11 +1042,21 @@ BOOL isPreseller = false;
             //            imageViewCity.frame = CGRectMake(10, 12,16,16);
             //            [self.cityButton addSubview:imageViewCity ];
             
+            NSString *langValue =[[NSUserDefaults standardUserDefaults] stringForKey:@"LangValue"];
+            NSString *buttonTitle = @"Giriş";
+            if([langValue isEqualToString:self.langList[0]])
+            {
+                buttonTitle = @"Login";
+            }
+            else if([langValue isEqualToString:self.langList[2]])
+            {
+                buttonTitle = @"Логин";
+            }
             
             
             self.goButton =  [[UIButton alloc] initWithFrame:CGRectMake(10,190,  mainRect.size.width-20, 40)];
-            [self.goButton setTitle:@"Go!" forState:UIControlStateNormal];
             self.goButton.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"btn_dark_grey"]];
+            [self.goButton setTitle:buttonTitle forState:UIControlStateNormal];
             self.goButton.titleLabel.textColor = [UIColor whiteColor];
             [self.goButton addTarget:self
                               action:@selector(clickedLogin:)
