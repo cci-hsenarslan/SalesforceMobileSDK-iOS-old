@@ -153,6 +153,7 @@ BOOL isPreseller = false;
 -(void)dismissKeyboard
 {
     [self.view endEditing:YES];
+    languageTableView.hidden = YES;
 }
 
 - (void) switchToggled:(id)sender {
@@ -290,15 +291,15 @@ BOOL isPreseller = false;
         return;
     }
     
-//    if ([self validateEmail:self.usernameTextField.text]) {
-//        UIAlertController *emailAlert = [UIAlertController alertControllerWithTitle:NSLocalizedString(@"email_error_title", "") message:NSLocalizedString(@"email_error_message", "") preferredStyle:UIAlertControllerStyleAlert];
-//        UIAlertAction *okAction = [UIAlertAction actionWithTitle:NSLocalizedString(@"OK", "") style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-//            [emailAlert dismissViewControllerAnimated:YES completion:nil];
-//        }];
-//        [emailAlert addAction:okAction];
-//        [self presentViewController:emailAlert animated:YES completion:nil];
-//        return ;
-//    }
+    if (![self isQA] && [self validateEmail:self.usernameTextField.text]) {
+        UIAlertController *emailAlert = [UIAlertController alertControllerWithTitle:NSLocalizedString(@"email_error_title", "") message:NSLocalizedString(@"email_error_message", "") preferredStyle:UIAlertControllerStyleAlert];
+        UIAlertAction *okAction = [UIAlertAction actionWithTitle:NSLocalizedString(@"OK", "") style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+            [emailAlert dismissViewControllerAnimated:YES completion:nil];
+        }];
+        [emailAlert addAction:okAction];
+        [self presentViewController:emailAlert animated:YES completion:nil];
+        return ;
+    }
     
     
     
@@ -316,11 +317,17 @@ BOOL isPreseller = false;
     [self.usernameTextField resignFirstResponder];
     [self.passwordTextField resignFirstResponder];
     NSString *urlAdfs=@"https://sso.cci.com.tr/adfs/ls/";
-    NSString *idLogin=@"username";//ContentPlaceHolder1_UsernameTextBox";
-    NSString *idPassword=@"password";//ContentPlaceHolder1_PasswordTextBox";
-    NSString *idError=@"error"; //ContentPlaceHolder1_ErrorTextLabel";
-    NSString *loginSubmitButtonHTMLString=@"document.getElementById(\"Login\").click();"; //ContentPlaceHolder1_SubmitButton
+    NSString *idLogin=@"ContentPlaceHolder1_UsernameTextBox";
+    NSString *idPassword=@"ContentPlaceHolder1_PasswordTextBox";
+    NSString *idError=@"ContentPlaceHolder1_ErrorTextLabel";
+    NSString *loginSubmitButtonHTMLString=@"document.getElementById(\"ContentPlaceHolder1_SubmitButton\").click();";
     
+    if ([self isQA]) {
+        idLogin=@"username";
+        idPassword=@"password";
+        idError=@"error";
+        loginSubmitButtonHTMLString=@"document.getElementById(\"Login\").click();";
+    }
     
     if (isPreseller) {
         idLogin = @"username";
@@ -768,6 +775,10 @@ BOOL isPreseller = false;
         [self.langList addObject:@"ENG"];
         [self.langList addObject:@"TUR"];
         [self.langList addObject:@"RUS"];
+        
+        UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(dismissKeyboard)];
+
+       
         self.view.backgroundColor = [UIColor.whiteColor colorWithAlphaComponent:0.9];
         UIImageView *bottleImage = [[UIImageView alloc] initWithFrame:self.view.layer.bounds];
         
@@ -778,6 +789,8 @@ BOOL isPreseller = false;
           [[UITapGestureRecognizer alloc] initWithTarget:self
                                                   action:@selector(handleSingleTap:)];
         [bottleImage addGestureRecognizer:singleFingerTap];
+        [bottleImage addGestureRecognizer:tap];
+        
         [self.view addSubview:bottleImage];
         //[self.view.layer addSublayer:self.playerLayer];
         [[NSNotificationCenter defaultCenter] addObserver: self
@@ -878,7 +891,6 @@ BOOL isPreseller = false;
             languageTableView.hidden = YES;
             [languageTableView setContentInset:UIEdgeInsetsMake(0, 0, 0, 0)];
             [languageTableView reloadData];
-            
             salesCenterTableView = [[UITableView alloc] initWithFrame:CGRectMake(10, 100,  mainRect.size.width-20, 150)
                                                                 style:UITableViewStyleGrouped];
             //    salesCenterTableView.tag = 1;
@@ -899,7 +911,7 @@ BOOL isPreseller = false;
             
             [_oauthView setAutoresizingMask:UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth];
             [_oauthView setFrame:self.view.bounds];
-            
+    
             //   self.view.backgroundColor = [UIColor colorWithRed:199.0/255.0 green:0/255.0 blue:17.0/255.0 alpha:1];
             //            self.view.backgroundColor = background;
             
@@ -919,9 +931,12 @@ BOOL isPreseller = false;
             UIView *paddingView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 40, 20)];
             self.usernameTextField.leftViewMode =UITextFieldViewModeAlways;
             self.usernameTextField.leftView = paddingView;
+            self.usernameTextField.autocapitalizationType = UITextAutocapitalizationTypeNone;
+            self.usernameTextField.autocorrectionType = UITextAutocorrectionTypeNo;
             self.usernameTextField.delegate = self;
             self.usernameTextField.placeholder = usernameLocal;
             self.usernameTextField.autocapitalizationType = UITextAutocapitalizationTypeNone;
+            self.usernameTextField.keyboardType = UIKeyboardTypeAlphabet;
             self.usernameTextField.textColor = [UIColor colorWithRed:200.0/255.0 green:160.0/255.0 blue:160.0/255.0 alpha:1];
             self.usernameTextField.font = [UIFont systemFontOfSize:18];
             self.usernameTextField.layer.cornerRadius = 8;
@@ -939,6 +954,9 @@ BOOL isPreseller = false;
             self.passwordTextField.placeholder = passwordLocal;
             self.passwordTextField.delegate = self;
             self.passwordTextField.secureTextEntry = YES;
+            self.passwordTextField.autocapitalizationType = UITextAutocapitalizationTypeNone;
+            self.passwordTextField.autocorrectionType = UITextAutocorrectionTypeNo;
+            self.passwordTextField.keyboardType = UIKeyboardTypeAlphabet;
             self.passwordTextField.textColor = [UIColor colorWithRed:200.0/255.0 green:160.0/255.0 blue:160.0/255.0 alpha:1];
             self.passwordTextField.font = [UIFont systemFontOfSize:18];
             self.passwordTextField.layer.cornerRadius = 8;
@@ -968,7 +986,8 @@ BOOL isPreseller = false;
             [self.languageButton addSubview:imgViewRightArrow1 ];
             
             
-            [self.languageButton setTitle:@"ENG" forState:UIControlStateNormal];
+            NSString *langValue =[[NSUserDefaults standardUserDefaults] stringForKey:@"LangValue"];
+            [self.languageButton setTitle:langValue forState:UIControlStateNormal];
             [self.languageButton setTitleColor:[UIColor colorWithRed:200.0/255.0 green:160.0/255.0 blue:160.0/255.0 alpha:1] forState:UIControlStateNormal ];
             self.languageButton.backgroundColor = [UIColor whiteColor];
             self.languageButton.contentHorizontalAlignment = UIControlContentHorizontalAlignmentLeft;
@@ -1042,7 +1061,7 @@ BOOL isPreseller = false;
             //            imageViewCity.frame = CGRectMake(10, 12,16,16);
             //            [self.cityButton addSubview:imageViewCity ];
             
-            NSString *langValue =[[NSUserDefaults standardUserDefaults] stringForKey:@"LangValue"];
+            
             NSString *buttonTitle = @"Giriş";
             if([langValue isEqualToString:self.langList[0]])
             {
@@ -1204,6 +1223,24 @@ BOOL isPreseller = false;
             
             self.centerView.center = CGPointMake(self.view.center.x, self.centerView.center.y);
             forManagersImageView.center = CGPointMake(self.view.center.x, forManagersImageView.center.y);
+            
+            
+            UIView *versionView = [[UIView alloc] initWithFrame:CGRectMake(20, 20, 100, 40)];
+            UILabel *versionLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 100, 40)];
+            [versionView addSubview:versionLabel];
+            if (@available(iOS 11.0, *)) {
+                UIWindow *window = UIApplication.sharedApplication.windows.firstObject;
+                CGFloat topPadding = window.safeAreaInsets.top;
+                
+                versionView.frame = CGRectMake(self.view.frame.size.width - 120, topPadding + 10, 100, 40);
+            }
+            versionLabel.textColor = UIColor.whiteColor;
+            versionView.backgroundColor = [UIColor colorWithWhite:0 alpha:0.5];
+            versionView.layer.cornerRadius = 8;
+            [self.view addSubview:versionView];
+            versionLabel.textAlignment = UITextAlignmentCenter;
+            
+            versionLabel.text = [NSString stringWithFormat:@"v%@",[[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"]];
         }
         if(usernameValue != nil && usernameValue.length > 0
            && passValue != nil && passValue.length > 0)
@@ -1238,13 +1275,25 @@ BOOL isPreseller = false;
             
             [t invalidate];
             t = nil;
-            self.msg = notification.object;
-            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Error!"
-                                                            message:notification.object
-                                                           delegate:self
-                                                  cancelButtonTitle:@"OK"
-                                                  otherButtonTitles:nil];
-            [alert show];
+            
+            NSString *langValue =[[NSUserDefaults standardUserDefaults] stringForKey:@"LangValue"];
+            NSString *message = @"Kullanıcı adı veya parola yanlış.";
+            if([langValue isEqualToString:self.langList[0]])
+            {
+                message = @"The user name or password is incorrect.";
+            }
+            else if([langValue isEqualToString:self.langList[2]])
+            {
+                message = @"Неверное имя пользователя или пароль.";
+            }
+            
+            CSToastStyle *style = [[CSToastStyle alloc] initWithDefaultStyle];
+            style.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"btn_dark_grey"]];
+            
+            [self.view makeToast:message
+                        duration:3.0
+                        position:CSToastPositionBottom
+                        style:style];
             
         }
         else
