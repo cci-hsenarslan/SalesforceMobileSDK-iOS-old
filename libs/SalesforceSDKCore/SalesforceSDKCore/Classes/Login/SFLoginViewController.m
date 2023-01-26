@@ -277,7 +277,7 @@ BOOL isPreseller = false;
         NSString *message = @"Kullanıcı adı veya şifre boş olamaz.";
         if([langValue isEqualToString:self.langList[0]])
         {
-            message = @"Username or password is can not be empty.";
+            message = @"Username or password can not be empty.";
         }
         else if([langValue isEqualToString:self.langList[2]])
         {
