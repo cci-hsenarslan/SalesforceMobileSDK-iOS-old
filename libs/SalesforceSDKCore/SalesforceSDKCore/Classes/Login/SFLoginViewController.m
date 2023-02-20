@@ -915,12 +915,11 @@ BOOL isPreseller = false;
             //   self.view.backgroundColor = [UIColor colorWithRed:199.0/255.0 green:0/255.0 blue:17.0/255.0 alpha:1];
             //            self.view.backgroundColor = background;
             
-            CGRect upRect = CGRectMake(mainRect.size.width/2-106, 110, 150, 85);
+            CGRect upRect = CGRectMake(mainRect.size.width-50, 200, mainRect.size.width - 100, 85);
             UIImageView *forManagersImageView = [[UIImageView alloc] initWithFrame:upRect];
-            
-            forManagersImageView.image = [UIImage imageNamed:@"ccim_logo_bottle"];
-            
-            CGRect centerRect = CGRectMake(0,mainRect.size.height-340, mainRect.size.width, 300);
+            forManagersImageView.contentMode = UIViewContentModeScaleAspectFit;
+            forManagersImageView.image = [UIImage imageNamed:@"Asapro_App_3072x3072_xBG_Beyaz"];
+            CGRect centerRect = CGRectMake(0,mainRect.size.height-350, mainRect.size.width, 300);
             
             self.centerView = [[UIView alloc] initWithFrame:centerRect];
             UITapGestureRecognizer *singleFingerTap =
