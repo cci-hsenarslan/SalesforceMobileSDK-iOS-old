@@ -45,6 +45,7 @@
 @end
 
 BOOL isPreseller = false;
+Boolean isLoadingAnimationShowed = NO;
 
 @implementation SFLoginViewController
 @synthesize oauthView = _oauthView;
@@ -64,7 +65,7 @@ BOOL isPreseller = false;
 - (void)viewWillDisappear:(BOOL)animated
 {
     [super viewWillDisappear:animated];
-    self.progressView.hidden = YES;
+    [self hideLoadingAnimation];
     [t invalidate];
     t = nil;
     [[NSNotificationCenter defaultCenter] removeObserver:self
@@ -124,7 +125,7 @@ BOOL isPreseller = false;
     
     _rect = self.view.frame;
     [super viewWillAppear:animated];
-    self.progressView.hidden = YES;
+    [self hideLoadingAnimation];
     [t invalidate];
     t = nil;
     [[NSNotificationCenter defaultCenter] addObserver:self
@@ -140,6 +141,21 @@ BOOL isPreseller = false;
         [_avPl play];
     }
 }
+
+- (void) showLoadingAnimation {
+    if(isLoadingAnimationShowed == NO) {
+        [[NSNotificationCenter defaultCenter] postNotification: [[NSNotification alloc] initWithName:@"ShowLoadingAnimation" object:nil userInfo:nil]];
+        isLoadingAnimationShowed = YES;
+    }
+}
+
+- (void) hideLoadingAnimation {
+    if(isLoadingAnimationShowed == YES) {
+        [[NSNotificationCenter defaultCenter] postNotification: [[NSNotification alloc] initWithName:@"HideLoadingAnimation" object:nil userInfo:nil]];
+        isLoadingAnimationShowed = NO;
+    }
+}
+
 - (void)viewDidAppear:(BOOL)animated
 {
     NSNumber *value = [NSNumber numberWithInt:UIInterfaceOrientationPortrait];
@@ -148,7 +164,7 @@ BOOL isPreseller = false;
     UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(dismissKeyboard)];
     
     [self.view addGestureRecognizer:tap];
-    self.progressView.hidden = YES;
+    [self hideLoadingAnimation];
 }
 -(void)dismissKeyboard
 {
@@ -190,10 +206,7 @@ BOOL isPreseller = false;
 
 - (void)dealloc {
     self.oauthView = nil;
-    if (self.progressView != nil)
-    {
-        self.progressView.hidden = YES;
-    }
+    [self hideLoadingAnimation];
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
@@ -221,7 +234,7 @@ BOOL isPreseller = false;
     {
         [t invalidate];
         t = nil;
-        self.progressView.hidden = YES;
+        [self hideLoadingAnimation];
         self.msg = @"Server error";
         UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Error!"
                                                         message:msg
@@ -341,8 +354,8 @@ BOOL isPreseller = false;
         loginUsername = [NSString stringWithFormat:@"%@%@", loginUsername, presellerPrefix];
         //        loginUsername = loginUsername + presellerPrefix;
     }
-    
-    self.progressView.hidden = NO;
+
+    [self showLoadingAnimation];
     UIWebView*webView=(UIWebView*)self.oauthView;
     
     if([self.usernameTextField.text length] >0)
@@ -366,7 +379,7 @@ BOOL isPreseller = false;
             NSString * errorOutput=[webView stringByEvaluatingJavaScriptFromString:@"document.getElementById(\"error\").textContent;"];
             NSLog(@"Do some work : %@", errorOutput);
             if(![errorOutput isEqual:@""]) {
-                self.progressView.hidden = YES;
+                [self hideLoadingAnimation];
                 CSToastStyle *style = [[CSToastStyle alloc] initWithDefaultStyle];
                 style.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"btn_dark_grey"]];
                 
@@ -402,8 +415,7 @@ BOOL isPreseller = false;
         //        [[[[[UIApplication sharedApplication] keyWindow] subviews] lastObject] addSubview:webView];
         //        [self.view addSubview:webView];
         //        [self.view bringSubviewToFront:webView];
-        self.progressView.hidden = true;
-        
+       
         [webView.scrollView setContentOffset:CGPointMake(0, 0) animated:YES];
         
         
@@ -911,9 +923,6 @@ BOOL isPreseller = false;
             
             [_oauthView setAutoresizingMask:UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth];
             [_oauthView setFrame:self.view.bounds];
-    
-            //   self.view.backgroundColor = [UIColor colorWithRed:199.0/255.0 green:0/255.0 blue:17.0/255.0 alpha:1];
-            //            self.view.backgroundColor = background;
             
             CGRect upRect = CGRectMake(mainRect.size.width-50, 200, mainRect.size.width - 100, 85);
             UIImageView *forManagersImageView = [[UIImageView alloc] initWithFrame:upRect];
@@ -923,8 +932,8 @@ BOOL isPreseller = false;
             
             self.centerView = [[UIView alloc] initWithFrame:centerRect];
             UITapGestureRecognizer *singleFingerTap =
-              [[UITapGestureRecognizer alloc] initWithTarget:self
-                                                      action:@selector(handleSingleTap:)];
+            [[UITapGestureRecognizer alloc] initWithTarget:self
+                                                    action:@selector(handleSingleTap:)];
             [self.centerView addGestureRecognizer:singleFingerTap];
             self.usernameTextField = [[UITextField alloc] initWithFrame:CGRectMake(10, 10, mainRect.size.width-20, 40)];
             UIView *paddingView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 40, 20)];
@@ -1104,17 +1113,7 @@ BOOL isPreseller = false;
             orLabel.textColor = [UIColor whiteColor];
             orLabel.textAlignment = NSTextAlignmentCenter;
             orLabel.font = [UIFont systemFontOfSize:18];
-            
-            self.progressView = [[UIView alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-            _progressView.layer.shadowColor = [UIColor blackColor].CGColor;
-            _progressView.layer.shadowOpacity = 1;
-            _progressView.layer.shadowOffset = CGSizeZero;
-            _progressView.layer.shadowRadius = 5;
-            
-            UIActivityIndicatorView *spinner = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
-            
-            spinner.color = [UIColor whiteColor];
-            [spinner startAnimating];
+
             CGSize size = [UIScreen mainScreen].bounds.size;
             CGFloat w = size.width;
             CGFloat h = size.height;
@@ -1129,62 +1128,9 @@ BOOL isPreseller = false;
             UIButton * btnCancel = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, 200, 200)];
             [btnCancel addTarget:self action:@selector(onButtonClickListener:) forControlEvents:UIControlEventTouchUpInside];
             
-            UIImageView* animatedImageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, subViewSize.width * 0.6, subViewSize.height * 0.7)];
-            animatedImageView.contentMode = UIViewContentModeScaleAspectFit;
-            animatedImageView.animationImages = [NSArray arrayWithObjects:
-                                                 [UIImage imageNamed:@"gif1"],
-                                                 [UIImage imageNamed:@"gif2"],
-                                                 [UIImage imageNamed:@"gif3"],
-                                                 [UIImage imageNamed:@"gif4"],
-                                                 [UIImage imageNamed:@"gif5"],
-                                                 [UIImage imageNamed:@"gif6"],
-                                                 [UIImage imageNamed:@"gif7"],
-                                                 [UIImage imageNamed:@"gif8"],
-                                                 [UIImage imageNamed:@"gif9"],
-                                                 [UIImage imageNamed:@"gif10"],
-                                                 [UIImage imageNamed:@"gif11"],
-                                                 [UIImage imageNamed:@"gif12"],
-                                                 [UIImage imageNamed:@"gif13"],
-                                                 [UIImage imageNamed:@"gif14"],
-                                                 [UIImage imageNamed:@"gif15"],
-                                                 [UIImage imageNamed:@"gif16"],
-                                                 [UIImage imageNamed:@"gif17"],
-                                                 [UIImage imageNamed:@"gif18"],
-                                                 [UIImage imageNamed:@"gif19"],
-                                                 [UIImage imageNamed:@"gif20"],
-                                                 [UIImage imageNamed:@"gif21"],
-                                                 [UIImage imageNamed:@"gif22"],
-                                                 [UIImage imageNamed:@"gif23"],
-                                                 [UIImage imageNamed:@"gif24"],
-                                                 [UIImage imageNamed:@"gif25"],
-                                                 [UIImage imageNamed:@"gif26"],
-                                                 [UIImage imageNamed:@"gif27"],
-                                                 [UIImage imageNamed:@"gif28"],
-                                                 [UIImage imageNamed:@"gif29"],
-                                                 [UIImage imageNamed:@"gif30"],
-                                                 [UIImage imageNamed:@"gif31"],
-                                                 [UIImage imageNamed:@"gif32"],
-                                                 [UIImage imageNamed:@"gif33"],
-                                                 [UIImage imageNamed:@"gif34"],
-                                                 [UIImage imageNamed:@"gif35"],
-                                                 [UIImage imageNamed:@"gif36"],
-                                                 [UIImage imageNamed:@"gif37"],
-                                                 [UIImage imageNamed:@"gif38"],nil];
-            animatedImageView.animationDuration = 2.3f;
-            animatedImageView.animationRepeatCount = 0;
-            [animatedImageView startAnimating];
-            
-            animatedImageView.center = CGPointMake(_progressView.frame.size.width / 2, _progressView.frame.size.height / 2);
-            
-            //            [subView addSubview:spinner];
-            //            spinner.center = CGPointMake(subView.frame.size.width / 2, subView.frame.size.height / 2);
-            
+    
             [subView addSubview:btnCancel];
-            
-            
-            [self.progressView addSubview:subView];
-            [_progressView addSubview: animatedImageView];
-            self.progressView.hidden = YES;
+            [self hideLoadingAnimation];
             
             _oauthView.hidden = YES;
             CGRect c=CGRectMake(0, 0,310,230);
@@ -1216,9 +1162,6 @@ BOOL isPreseller = false;
             [self.view addSubview:self.centerView];
             [self.view addSubview:_oauthView];
             //      [self.centerView addSubview:salesCenterTableView];
-            
-            [self.view addSubview:self.progressView];
-            self.progressView.center = CGPointMake(self.view.center.x, self.view.center.y);
             
             self.centerView.center = CGPointMake(self.view.center.x, self.centerView.center.y);
             forManagersImageView.center = CGPointMake(self.view.center.x, forManagersImageView.center.y);
@@ -1268,7 +1211,7 @@ BOOL isPreseller = false;
     {
         
         self.isLoginClick = NO;
-        self.progressView.hidden = YES;
+        [self hideLoadingAnimation];
         if([notification.object length] > 0 && ![notification.object isEqualToString:self.msg] )
         {
             
@@ -1374,9 +1317,7 @@ BOOL isPreseller = false;
         [webView stopLoading];
         self.isLoginClick = NO;
     }
-    
-    self.progressView.hidden = YES;
-    
+    [self hideLoadingAnimation];
 }
 
 #pragma mark - Styling Methods for Nav bar
